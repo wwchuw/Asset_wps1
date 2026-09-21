@@ -21,7 +21,7 @@
   const fmtDate = (iso) => { const d = new Date(iso); return !iso || isNaN(d) ? "" : d.toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }); };
   const state = {
     assets: [], server: {}, records: {}, sheetUrl: "",
-    year: String(store.get("year", fiscalYear())), filter: "all", q: "", session: store.get("session", null)
+    year: String(store.get("year", fiscalYear())), building: store.get("building", ""), filter: "all", q: "", session: store.get("session", null)
   };
   const findAsset = (id) => state.assets.find((a) => a.id === String(id).trim());
   const thumb = (a, size) => a.imageId ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(a.imageId)}&sz=w${size}` : "";
@@ -92,7 +92,7 @@
       const j = await api("load");
       state.assets = j.assets; state.server = j.records || {}; state.sheetUrl = j.sheetUrl || "";
       store.set("cache", { assets: state.assets, server: state.server, sheetUrl: state.sheetUrl });
-      fillYears(); composeRecords(); showList(); render();
+      fillYears(); fillBuildings(); composeRecords(); showList(); render();
       flush();
     } catch (e) {
       if (e instanceof ApiError && /รหัสทีม/.test(e.message)) return logout(e.message);
@@ -140,9 +140,19 @@
   }
 
   /* ---------- list ---------- */
+  const inBuilding = (a) => !state.building || (a.building || "ไม่ระบุอาคาร") === state.building;
+  function fillBuildings() {
+    const count = {};
+    for (const a of state.assets) { const b = a.building || "ไม่ระบุอาคาร"; count[b] = (count[b] || 0) + 1; }
+    const names = Object.keys(count).sort((x, y) => x.localeCompare(y, "th"));
+    if (state.building && !count[state.building]) { state.building = ""; store.set("building", ""); }
+    $("#building").innerHTML = `<option value="">ทุกอาคาร (${state.assets.length})</option>` +
+      names.map((b) => `<option value="${esc(b)}" ${b === state.building ? "selected" : ""}>${esc(b)} (${count[b]})</option>`).join("");
+  }
   function filtered() {
     const q = state.q.trim().toLowerCase();
     return state.assets.filter((a) => {
+      if (!inBuilding(a)) return false;
       const rec = state.records[a.id];
       const t = tone(rec?.status);
       if (state.filter === "todo" && rec) return false;
@@ -154,10 +164,12 @@
   }
   function render() {
     if (!state.assets.length) return;
-    const done = state.assets.filter((a) => state.records[a.id]).length;
+    const scope = state.assets.filter(inBuilding);
+    const done = scope.filter((a) => state.records[a.id]).length;
     $("#doneCount").textContent = done;
-    $("#totalCount").textContent = state.assets.length;
-    $("#bar").style.width = (100 * done / state.assets.length) + "%";
+    $("#totalCount").textContent = scope.length;
+    $("#scope").textContent = state.building ? ` ใน${state.building}` : "";
+    $("#bar").style.width = (scope.length ? 100 * done / scope.length : 0) + "%";
     const items = filtered();
     $("#empty").hidden = items.length > 0;
     $("#list").innerHTML = items.map((a) => {
@@ -392,6 +404,10 @@
   }
 
   /* ---------- controls ---------- */
+  $("#building").addEventListener("change", (e) => {
+    state.building = e.target.value; store.set("building", state.building); render();
+    window.scrollTo({ top: 0 });
+  });
   $("#q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
   $("#chips").addEventListener("click", (e) => {
     const b = e.target.closest("[data-f]"); if (!b) return;
@@ -434,7 +450,7 @@
     const cache = store.get("cache", null);
     if (cache?.assets?.length) {
       state.assets = cache.assets; state.server = cache.server || {}; state.sheetUrl = cache.sheetUrl || "";
-      fillYears(); composeRecords(); showList(); render(); updateSync();
+      fillYears(); fillBuildings(); composeRecords(); showList(); render(); updateSync();
     } else {
       showMessage("กำลังโหลดข้อมูล…", "");
     }
