@@ -189,3 +189,13 @@ button { cursor: pointer; }
 .qr-id { margin: 0; font-weight: 600; font-size: 16px; letter-spacing: .02em; }
 .qr-hint { margin: 2px 0 10px; font-size: 13px; color: var(--muted); line-height: 1.45; }
 .qr-box .btn { padding: 8px 14px; font-size: 14px; text-decoration: none; }
+
+/* กรองตามอาคาร */
+.search { display: grid; gap: 8px; }
+#building {
+  width: 100%; padding: 11px 36px 11px 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%230E3A4A' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center;
+  appearance: none; -webkit-appearance: none; color: var(--ink);
+}
+.scope { display: block; font-size: 14px; margin-top: 2px; }
+.scope:empty { display: none; }
