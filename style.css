@@ -199,3 +199,18 @@ button { cursor: pointer; }
 }
 .scope { display: block; font-size: 14px; margin-top: 2px; }
 .scope:empty { display: none; }
+
+/* อายุการใช้งาน */
+.rage { display: inline-block; margin-top: 3px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.rage.bad { background: #F6E3DF; color: var(--bad); }
+.rage.warn { background: #F8EEDC; color: #8a5a12; }
+.age-bad { color: var(--bad); font-weight: 500; }
+.age-warn { color: #8a5a12; font-weight: 500; }
+
+/* จำนวนในตัวกรอง และสรุปอายุ */
+.chips .n { font-size: 12px; opacity: .7; margin-left: 2px; }
+.chips .n:empty { display: none; }
+.age-summary {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; padding: 0;
+  background: none; border: 0; font-size: 14px; text-align: left; text-decoration: underline dotted; text-underline-offset: 3px;
+}
