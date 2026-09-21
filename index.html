@@ -45,12 +45,13 @@
 
 <main id="screen-list" hidden>
   <section class="progress" aria-live="polite">
-    <p class="count"><strong id="doneCount">0</strong> จาก <span id="totalCount">0</span> รายการตรวจแล้ว</p>
+    <p class="count"><strong id="doneCount">0</strong> จาก <span id="totalCount">0</span> รายการตรวจแล้ว<span id="scope" class="scope"></span></p>
     <div class="bar"><i id="bar"></i></div>
     <p id="syncNote" class="sync"></p>
   </section>
   <div class="search">
     <input id="q" type="search" placeholder="ค้นหารหัส ชื่อ ห้อง หรืออาคาร" autocomplete="off">
+    <select id="building" aria-label="กรองตามอาคาร"></select>
   </div>
   <div class="chips" id="chips">
     <button data-f="all" class="on">ทั้งหมด</button>
