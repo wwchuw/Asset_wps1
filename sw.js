@@ -1,6 +1,6 @@
 // Service worker: เก็บหน้าแอปและไลบรารีไว้ในเครื่อง ให้เปิดได้แม้ไม่มีเน็ต
 // เมื่อแก้ไฟล์แอป ให้เปลี่ยนเลขเวอร์ชันนี้ เพื่อให้มือถือโหลดของใหม่
-const VERSION = "asset-audit-gas-v3";
+const VERSION = "asset-audit-gas-v5";
 const SHELL = ["./", "index.html", "style.css", "app.js", "config.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
 const CDN = [
   "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js",
