@@ -23,6 +23,16 @@
     assets: [], server: {}, records: {}, sheetUrl: "",
     year: String(store.get("year", fiscalYear())), building: store.get("building", ""), filter: "all", q: "", session: store.get("session", null)
   };
+  // อายุการใช้งาน: เทียบปีงบที่เปลี่ยนได้กับปีงบปัจจุบัน (ไม่ใช่ปีงบที่เลือกดูผลตรวจ)
+  const disposed = (a) => a.status === "จำหน่ายคืน";
+  function ageInfo(a) {
+    if (disposed(a) || !a.replaceFY) return null;
+    const now = fiscalYear();
+    if (a.replaceFY <= now) return { tone: "bad", short: "ครบอายุ", text: `ครบอายุแล้ว (ตั้งแต่ปีงบ ${a.replaceFY})` };
+    if (a.replaceFY === now + 1) return { tone: "warn", short: "ครบปีงบหน้า", text: `ครบอายุปีงบหน้า (${a.replaceFY})` };
+    return { tone: "ok", short: "", text: `ปีงบ ${a.replaceFY} (อีก ${a.replaceFY - now} ปี)` };
+  }
+  const isDue = (a) => { const g = ageInfo(a); return !!g && g.tone !== "ok"; };
   const findAsset = (id) => state.assets.find((a) => a.id === String(id).trim());
   const thumb = (a, size) => a.imageId ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(a.imageId)}&sz=w${size}` : "";
 
@@ -149,15 +159,30 @@
     $("#building").innerHTML = `<option value="">ทุกอาคาร (${state.assets.length})</option>` +
       names.map((b) => `<option value="${esc(b)}" ${b === state.building ? "selected" : ""}>${esc(b)} (${count[b]})</option>`).join("");
   }
+  const FILTERS = {
+    all: () => true,
+    todo: (a) => !state.records[a.id],
+    done: (a) => !!state.records[a.id],
+    issue: (a) => { const t = tone(state.records[a.id]?.status); return t === "warn" || t === "bad"; },
+    due: (a) => isDue(a)
+  };
+  function renderCounts(scope) {
+    for (const k of Object.keys(FILTERS)) {
+      const el = document.querySelector(`[data-n="${k}"]`);
+      if (el) el.textContent = scope.filter(FILTERS[k]).length;
+    }
+    let over = 0, next = 0;
+    for (const a of scope) { const g = ageInfo(a); if (g?.tone === "bad") over++; else if (g?.tone === "warn") next++; }
+    const box = $("#ageSummary");
+    box.hidden = !(over || next);
+    box.innerHTML = `<span class="age-bad">ครบอายุแล้ว ${over} รายการ</span>` +
+      (next ? `<span class="age-warn">ครบปีงบหน้า ${next} รายการ</span>` : "");
+  }
   function filtered() {
     const q = state.q.trim().toLowerCase();
     return state.assets.filter((a) => {
       if (!inBuilding(a)) return false;
-      const rec = state.records[a.id];
-      const t = tone(rec?.status);
-      if (state.filter === "todo" && rec) return false;
-      if (state.filter === "done" && !rec) return false;
-      if (state.filter === "issue" && t !== "warn" && t !== "bad") return false;
+      if (!FILTERS[state.filter](a)) return false;
       if (!q) return true;
       return [a.id, a.name, a.room, a.building, a.owner].join(" ").toLowerCase().includes(q);
     });
@@ -169,6 +194,7 @@
     $("#doneCount").textContent = done;
     $("#totalCount").textContent = scope.length;
     $("#scope").textContent = state.building ? ` ใน${state.building}` : "";
+    renderCounts(scope);
     $("#bar").style.width = (scope.length ? 100 * done / scope.length : 0) + "%";
     const items = filtered();
     $("#empty").hidden = items.length > 0;
@@ -183,6 +209,7 @@
           <span class="rid">${esc(a.id)}</span>
           <span class="rname">${esc(a.name)}</span>
           <span class="rloc">${esc(loc)}</span>
+          ${(() => { const g = ageInfo(a); return g && g.short ? `<span class="rage ${g.tone}">${esc(g.short)} ${esc(a.replaceFY)}</span>` : ""; })()}
         </span>
         <span class="rstat">${esc(rec?.status || "ยังไม่ตรวจ")}${rec?.pending ? "<br>รอส่ง" : ""}</span>
       </button></li>`;
@@ -237,6 +264,10 @@
           ${fact("สถานที่", esc(a.room))}
           ${fact("อาคาร", esc(a.building))}
           ${fact("สถานะ", esc(a.status))}
+          ${fact("วันที่ได้มา", esc(a.acquired))}
+          ${fact("อายุการใช้งาน", a.life ? esc(a.life) + " ปี" : (a.acquired ? "ไม่กำหนด" : ""))}
+          ${(() => { const g = ageInfo(a); return g ? fact("เปลี่ยนได้", `<span class="age-${g.tone}">${esc(g.text)}</span>`) : ""; })()}
+          ${fact("ขอทดแทนแล้ว", a.replaceReq ? "ปี " + esc(a.replaceReq) : "")}
           ${fact("หมายเหตุ", esc(a.note))}
           ${a.lat != null && a.lng != null ? fact("ตำแหน่ง", `<a href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">เปิดในแผนที่</a>`) : ""}
         </dl>
@@ -407,6 +438,11 @@
   $("#building").addEventListener("change", (e) => {
     state.building = e.target.value; store.set("building", state.building); render();
     window.scrollTo({ top: 0 });
+  });
+  $("#ageSummary").addEventListener("click", () => {
+    state.filter = "due";
+    $("#chips").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.f === "due"));
+    render();
   });
   $("#q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
   $("#chips").addEventListener("click", (e) => {
