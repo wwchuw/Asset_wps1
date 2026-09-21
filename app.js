@@ -195,6 +195,15 @@
   window.addEventListener("popstate", () => closeTop());
   const back = () => history.back();
 
+  /* ---------- QR code ของทรัพย์สิน (เข้ารหัสเฉพาะรหัสสินทรัพย์ เหมือนสติ๊กเกอร์เดิม) ---------- */
+  function qrDataUrl(text) {
+    if (typeof qrcode !== "function") return "";
+    const q = qrcode(0, "M");
+    q.addData(String(text));
+    q.make();
+    return q.createDataURL(8, 4);
+  }
+
   /* ---------- detail ---------- */
   let draft = null;
   function openDetail(id, fromScan, replace) {
@@ -219,6 +228,15 @@
           ${fact("หมายเหตุ", esc(a.note))}
           ${a.lat != null && a.lng != null ? fact("ตำแหน่ง", `<a href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">เปิดในแผนที่</a>`) : ""}
         </dl>
+        ${(() => { const qr = qrDataUrl(a.id); return qr ? `
+        <section class="qr-box">
+          <img src="${qr}" alt="QR code รหัส ${esc(a.id)}">
+          <div>
+            <p class="qr-id">${esc(a.id)}</p>
+            <p class="qr-hint">ใช้แทนสติ๊กเกอร์ที่สแกนไม่ติด กดค้างที่รูปเพื่อบันทึกหรือพิมพ์ใหม่</p>
+            <a class="btn ghost" download="QR_${esc(a.id)}.gif" href="${qr}">ดาวน์โหลด QR</a>
+          </div>
+        </section>` : ""; })()}
         <section class="audit">
           <h3>ผลตรวจปีงบ ${esc(state.year)}</h3>
           <p class="last">${rec ? `ล่าสุด: ${esc(rec.status)}${rec.by ? " โดย " + esc(rec.by) : ""}${rec.at ? " " + esc(fmtDate(rec.at)) : ""}${rec.pending ? " (รอส่ง)" : ""}` : "ยังไม่ได้ตรวจ"}</p>
