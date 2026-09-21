@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E3A4A">
+<title>ตรวจทรัพย์สิน</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>ตรวจทรัพย์สิน</h1>
+    <span id="who"></span>
+  </div>
+  <div class="top-actions" id="topActions" hidden>
+    <label class="year">ปีงบ <select id="year"></select></label>
+    <button id="menuBtn" class="icon-btn" aria-label="เมนู" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </button>
+    <div id="menu" class="menu" hidden>
+      <button data-act="refresh">โหลดข้อมูลใหม่</button>
+      <button data-act="sheet">เปิด Google Sheet</button>
+      <button data-act="logout">ออกจากระบบ</button>
+    </div>
+  </div>
+</header>
+
+<main id="screen-msg" class="msg" hidden>
+  <h2 id="msgTitle"></h2>
+  <p id="msgText"></p>
+  <button id="msgBtn" class="btn primary"></button>
+  <form id="login" class="login" hidden>
+    <label>รหัสทีม<input id="loginKey" type="password" autocomplete="current-password" required></label>
+    <label>ชื่อผู้ตรวจ<input id="loginName" autocomplete="name" required placeholder="ชื่อที่จะบันทึกในผลตรวจ"></label>
+    <button class="btn primary">เข้าใช้งาน</button>
+  </form>
+</main>
+
+<main id="screen-list" hidden>
+  <section class="progress" aria-live="polite">
+    <p class="count"><strong id="doneCount">0</strong> จาก <span id="totalCount">0</span> รายการตรวจแล้ว</p>
+    <div class="bar"><i id="bar"></i></div>
+    <p id="syncNote" class="sync"></p>
+  </section>
+  <div class="search">
+    <input id="q" type="search" placeholder="ค้นหารหัส ชื่อ ห้อง หรืออาคาร" autocomplete="off">
+  </div>
+  <div class="chips" id="chips">
+    <button data-f="all" class="on">ทั้งหมด</button>
+    <button data-f="todo">ยังไม่ตรวจ</button>
+    <button data-f="done">ตรวจแล้ว</button>
+    <button data-f="issue">ต้องติดตาม</button>
+  </div>
+  <ul id="list" class="list"></ul>
+  <p id="empty" class="empty" hidden>ไม่มีรายการที่ตรงกับการค้นหา</p>
+</main>
+
+<button id="scanBtn" class="scan-btn" hidden>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+  สแกน QR
+</button>
+
+<section id="detail" class="sheet" hidden aria-modal="true" role="dialog"></section>
+
+<section id="scanner" class="sheet dark" hidden aria-modal="true" role="dialog">
+  <div class="sheet-bar">
+    <button class="back" data-close>ปิดกล้อง</button>
+    <span>ส่องกล้องไปที่ QR บนทรัพย์สิน</span>
+  </div>
+  <div id="reader"></div>
+  <p id="scanErr" class="scan-err"></p>
+  <form id="manual" class="manual">
+    <input id="manualId" inputmode="numeric" placeholder="หรือพิมพ์รหัสสินทรัพย์" autocomplete="off">
+    <button class="btn light">เปิด</button>
+  </form>
+</section>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
